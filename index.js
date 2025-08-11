@@ -8,13 +8,7 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-// ✅ CORS harus di-apply PALING ATAS
-app.use(cors({
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
-
-app.options('*', cors());
+app.use(cors());
 
 // ✅ Log request untuk debug
 app.use((req, res, next) => {
