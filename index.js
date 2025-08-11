@@ -71,7 +71,7 @@ app.post("/nearby-place", async (req, res) => {
       `https://places.googleapis.com/v1/places:searchNearby`,
       {
         includedTypes: [category],
-        maxResultCount: 10,
+        maxResultCount: 30,
         locationRestriction: {
           circle: {
             center: { latitude: lat, longitude: long },
@@ -97,7 +97,7 @@ app.post("/nearby-place", async (req, res) => {
 
 app.post("/listSearch", async (req, res) => {
   try {
-    const { address } = req.body;
+    const { address, category, radius } = req.body;
     const searchAddress = address.replace(/ /g, "+");
 
     const listAddress = await axios.get(
@@ -105,7 +105,63 @@ app.post("/listSearch", async (req, res) => {
     );
 
     if (listAddress.data.results?.length > 0) {
-      return res.status(200).json({ address: listAddress.data.results });
+        const lat = listAddress.data.results[0].geometry.location.lat;
+        const long = listAddress.data.results[0].geometry.location.lng;
+
+        const nearby = await axios.post(
+        `https://places.googleapis.com/v1/places:searchNearby`,
+            {
+                includedTypes: [category],
+                maxResultCount: 10,
+                locationRestriction: {
+                circle: {
+                    center: { latitude: lat, longitude: long },
+                    radius: radius || 1000,
+                },
+                },
+            },
+            {
+                headers: {
+                "Content-Type": "application/json",
+                "X-Goog-Api-Key": GOOGLE_API_KEY,
+                "X-Goog-FieldMask": "places.displayName,places.location,places.photos",
+                },
+            }
+        );
+        if(nearby){
+            const promptPlace= []
+            const photos = []
+            for (let place of nearby.data.places) {
+                const photoItem ={
+                    id: place.location.latitude +"-"+ place.location.longitude,
+                    photos: place.photos
+                }
+                photos.push(photoItem);
+                delete place.photos;
+                promptPlace.push(place)
+            }
+            const prompt = `Please Generate Result list JSON Stringfy [{name (string),latitude (double), longitude (double)
+            , description (please tell history, created at or found at and story unique about this place), linkMaps (string)}] based on the data
+            ${JSON.stringify(promptPlace)}.`;
+            console.log("aiRes", prompt);
+            const aiRes = await openai.chat.completions.create({
+            model: "gpt-3.5-turbo",
+            messages: [{ role: "user", content: prompt }],
+            });
+            
+            const aiText = aiRes.choices[0].message.content;
+            const aiParse = JSON.parse(aiText);
+            for (let place of aiParse) {
+                const photo = photos.find(p => p.id === place.latitude + "-" + place.longitude);
+                if (photo) {
+                    place.photos = photo.photos;
+                }
+            }
+            return res.status(200).json(aiParse);
+        }else{
+            return res.status(404).json({ message: "No Data", resp: nearby.data });
+        }
+      
     } else {
       return res.status(404).json({ message: "No Data", resp: listAddress.data });
     }
