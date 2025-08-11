@@ -29,7 +29,7 @@ jobs:
           fi
           cd /var/www/map-prompt-api
           if [ ! -d .git ]; then
-            git clone git@github.com:YOUR_USERNAME/map-prompt-api.git .
+            git clone git@github.com:mratri10/map-ai.git .
           else
             git reset --hard
             git pull origin main
