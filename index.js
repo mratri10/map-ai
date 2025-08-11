@@ -2,6 +2,7 @@ import axios from "axios";
 import dotenv from "dotenv";
 import express from "express";
 import OpenAI from "openai";
+import cors from "cors";
 
 dotenv.config();
 const app = express();
