@@ -16,7 +16,7 @@ jobs:
     - name: Setup SSH
       run: |
         mkdir -p ~/.ssh
-        echo "${{ secrets.VPS_KEY }}" | tr -d '\r' > ~/.ssh/deploy_key
+        printf "%s\n" "${{ secrets.VPS_KEY }}" > ~/.ssh/deploy_key
         chmod 600 ~/.ssh/deploy_key
         ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
 
