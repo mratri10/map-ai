@@ -24,10 +24,10 @@ jobs:
       run: |
         ssh -i ~/.ssh/deploy_key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
           set -e
-          if [ ! -d /var/www/map-prompt-api ]; then
-            mkdir -p /var/www/map-prompt-api
+          if [ ! -d /var/www/map-ai ]; then
+            mkdir -p /var/www/map-ai
           fi
-          cd /var/www/map-prompt-api
+          cd /var/www/map-ai
           if [ ! -d .git ]; then
             git clone git@github.com:mratri10/map-ai.git .
           else
@@ -35,5 +35,5 @@ jobs:
             git pull origin main
           fi
           npm install --production
-          pm2 restart map-prompt-api || pm2 start index.js --name map-prompt-api
+          pm2 restart map-ai || pm2 start index.js --name map-ai
         EOF

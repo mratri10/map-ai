@@ -24,9 +24,9 @@ const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 // =======================
 app.get("/info-place", async (req, res) => {
   try {
-    const { name, category } = req.query;
-    const prompt = `Please Generate Result list JSON Stringfy [{name,latitude (double), longitude (double), describe(string)}]
-      for ${category} in Kota/Kabupaten ${name}, Indonesia. link image please take from google`;
+    const { name, category, placeType } = req.query;
+    const prompt = `Please Generate Result list JSON Stringfy [{name,latitude (double), longitude (double)}]
+      for ${category} in ${placeType} ${name}, Indonesia.`;
 
     const aiRes = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
