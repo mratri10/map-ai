@@ -1,0 +1,39 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.VPS_KEY }}" > ~/.ssh/deploy_key
+        chmod 600 ~/.ssh/deploy_key
+        ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+
+    - name: Deploy to VPS
+      run: |
+        ssh -i ~/.ssh/deploy_key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+          set -e
+          if [ ! -d /var/www/map-prompt-api ]; then
+            mkdir -p /var/www/map-prompt-api
+          fi
+          cd /var/www/map-prompt-api
+          if [ ! -d .git ]; then
+            git clone git@github.com:YOUR_USERNAME/map-prompt-api.git .
+          else
+            git reset --hard
+            git pull origin main
+          fi
+          npm install --production
+          pm2 restart map-prompt-api || pm2 start index.js --name map-prompt-api
+        EOF
